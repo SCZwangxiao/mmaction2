@@ -1,0 +1,1 @@
+./tools/dist_train.sh configs/recognition/tsn/hetu/tsn_r50_video_1x1x8_kinetics400_ft50e_hetu_rgb.py 8 --validate --test-best
