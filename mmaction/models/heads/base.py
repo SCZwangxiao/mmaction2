@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 import torch
 import torch.nn as nn
 
-from ...core import top_k_accuracy
+from ...core import top_k_accuracy, mmit_mean_average_precision
 from ..builder import build_loss
 
 
@@ -88,15 +88,20 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
 
         if not self.multi_class and cls_score.size() != labels.size():
             top_k_acc = top_k_accuracy(cls_score.detach().cpu().numpy(),
-                                       labels.detach().cpu().numpy(), (1, 5))
+                                        labels.detach().cpu().numpy(), (1, 5))
             losses['top1_acc'] = torch.tensor(
                 top_k_acc[0], device=cls_score.device)
             losses['top5_acc'] = torch.tensor(
                 top_k_acc[1], device=cls_score.device)
 
-        elif self.multi_class and self.label_smooth_eps != 0:
-            labels = ((1 - self.label_smooth_eps) * labels +
-                      self.label_smooth_eps / self.num_classes)
+        elif self.multi_class:
+            mAP = mmit_mean_average_precision(cls_score.detach().cpu().numpy(),
+                                        labels.detach().cpu().numpy())
+            losses['mAP'] = torch.tensor(
+                mAP, device=cls_score.device)
+            if self.label_smooth_eps != 0:
+                labels = ((1 - self.label_smooth_eps) * labels +
+                        self.label_smooth_eps / self.num_classes)
 
         loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         # loss_cls may be dictionary or single tensor
