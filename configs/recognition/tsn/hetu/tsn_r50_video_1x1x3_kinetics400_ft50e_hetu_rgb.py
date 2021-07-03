@@ -20,11 +20,12 @@ data_root_val = 'data/hetu/videos'
 ann_file_train = 'data/hetu/hetu_train_list.txt'
 ann_file_val = 'data/hetu/hetu_val_list.txt'
 ann_file_test = 'data/hetu/hetu_test_list.txt'
+
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 train_pipeline = [
     dict(type='DecordInit'),
-    dict(type='SampleFrames', clip_len=1, frame_interval=1, num_clips=8),
+    dict(type='SampleFrames', clip_len=1, frame_interval=1, num_clips=3),
     dict(type='DecordDecode'),
     dict(type='Resize', scale=(-1, 256)),
     dict(
@@ -46,7 +47,7 @@ val_pipeline = [
         type='SampleFrames',
         clip_len=1,
         frame_interval=1,
-        num_clips=8,
+        num_clips=3,
         test_mode=True),
     dict(type='DecordDecode'),
     dict(type='Resize', scale=(-1, 256)),
@@ -111,7 +112,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
 lr_config = dict(policy='step', step=[20, 40])
 total_epochs = 50
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=1)
 log_config = dict(  # 注册日志钩子的设置
     interval=20,  # 打印日志间隔
     hooks=[  # 训练期间执行的钩子
@@ -120,7 +121,7 @@ log_config = dict(  # 注册日志钩子的设置
     ])
 
 # use the pre-trained model for the whole TSN network
-load_from = 'https://download.openmmlab.com/mmaction/recognition/tsn/tsn_r50_video_1x1x8_100e_kinetics400_rgb/tsn_r50_video_1x1x8_100e_kinetics400_rgb_20200702-568cde33.pth'  # model path can be found in model zoo
+load_from = 'https://download.openmmlab.com/mmaction/recognition/tsn/tsn_r50_video_320p_1x1x3_100e_kinetics400_rgb/tsn_r50_video_320p_1x1x3_100e_kinetics400_rgb_20201014-5ae1ee79.pth'  # model path can be found in model zoo
 
 # runtime settings
-work_dir = './work_dirs/tsn_r50_video_1x1x8_kinetics400_ft50e_hetu_rgb/'
+work_dir = './work_dirs/tsn_r50_video_1x1x3_kinetics400_ft50e_hetu_rgb/'
