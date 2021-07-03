@@ -56,8 +56,9 @@ def init_recognizer(config,
 
 
 def inference_recognizer(model,
-                         video_path,
-                         label_path,
+                         video_path=None,
+                         label_path=None,
+                         topk=5,
                          use_frames=False,
                          outputs=None,
                          as_tensor=True):
@@ -134,9 +135,12 @@ def inference_recognizer(model,
         returned_features = h.layer_outputs if outputs else None
 
     score_tuples = tuple(zip(label, scores))
-    score_sorted = sorted(score_tuples, key=itemgetter(1), reverse=True)
-
-    top5_label = score_sorted[:5]
+    
+    if topk=='all':
+        topk_label = score_tuples
+    else:
+        score_sorted = sorted(score_tuples, key=itemgetter(1), reverse=True)
+        topk_label = score_sorted[:topk]
     if outputs:
         return top5_label, returned_features
-    return top5_label
+    return topk_label
