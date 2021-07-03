@@ -1,1 +1,1 @@
-./tools/dist_train.sh configs/recognition/tsn/hetu/tsn_r50_video_1x1x8_kinetics400_ft50e_hetu_rgb.py 8 --validate --test-best
+./tools/dist_train.sh configs/recognition/tanet/hetu/tanet_r50_video_1x1x8_100e_hetu_rgb.py 8 --validate --test-best --resume-from work_dirs/tanet_r50_video_1x1x8_100e_hetu_rgb/epoch_56.pth
