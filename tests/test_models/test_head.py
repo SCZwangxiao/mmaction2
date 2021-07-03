@@ -8,9 +8,10 @@ import torch
 import torch.nn as nn
 
 import mmaction
-from mmaction.models import (AudioTSNHead, BBoxHeadAVA, FBOHead, I3DHead,
-                             LFBInferHead, SlowFastHead, TPNHead, TRNHead,
-                             TSMHead, TSNHead, X3DHead)
+from mmaction.models import (ACRNHead, AudioTSNHead, BBoxHeadAVA, FBOHead,
+                             I3DHead, LFBInferHead, SlowFastHead,
+                             TimeSformerHead, TPNHead, TRNHead, TSMHead,
+                             TSNHead, X3DHead)
 from .base import generate_backbone_demo_inputs
 
 
@@ -366,6 +367,23 @@ def test_trn_head():
             relation_type='RelationModlue')
 
 
+def test_timesformer_head():
+    """Test loss method, layer construction, attributes and forward function in
+    timesformer head."""
+    timesformer_head = TimeSformerHead(num_classes=4, in_channels=64)
+    timesformer_head.init_weights()
+
+    assert timesformer_head.num_classes == 4
+    assert timesformer_head.in_channels == 64
+    assert timesformer_head.init_std == 0.02
+
+    input_shape = (2, 64)
+    feat = torch.rand(input_shape)
+
+    cls_scores = timesformer_head(feat)
+    assert cls_scores.shape == torch.Size([2, 4])
+
+
 @patch.object(mmaction.models.LFBInferHead, '__del__', Mock)
 def test_lfb_infer_head():
     """Test layer construction, attributes and forward function in lfb infer
@@ -476,3 +494,25 @@ def test_tpn_head():
     assert isinstance(tpn_head.avg_pool2d, nn.AvgPool3d)
     assert tpn_head.avg_pool2d.kernel_size == (1, 7, 7)
     assert cls_scores.shape == torch.Size([2, 4])
+
+
+def test_acrn_head():
+    roi_feat = torch.randn(4, 16, 1, 7, 7)
+    feat = torch.randn(2, 16, 1, 16, 16)
+    rois = torch.Tensor([[0, 2.2268, 0.5926, 10.6142, 8.0029],
+                         [0, 2.2577, 0.1519, 11.6451, 8.9282],
+                         [1, 1.9874, 1.0000, 11.1585, 8.2840],
+                         [1, 3.3338, 3.7166, 8.4174, 11.2785]])
+
+    acrn_head = ACRNHead(32, 16)
+    acrn_head.init_weights()
+    new_feat = acrn_head(roi_feat, feat, rois)
+    assert new_feat.shape == (4, 16, 1, 16, 16)
+
+    acrn_head = ACRNHead(32, 16, stride=2)
+    new_feat = acrn_head(roi_feat, feat, rois)
+    assert new_feat.shape == (4, 16, 1, 8, 8)
+
+    acrn_head = ACRNHead(32, 16, stride=2, num_convs=2)
+    new_feat = acrn_head(roi_feat, feat, rois)
+    assert new_feat.shape == (4, 16, 1, 8, 8)
