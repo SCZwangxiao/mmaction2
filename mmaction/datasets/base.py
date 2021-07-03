@@ -11,7 +11,8 @@ from mmcv.utils import print_log
 from torch.utils.data import Dataset
 
 from ..core import (mean_average_precision, mean_class_accuracy,
-                    mmit_mean_average_precision, top_k_accuracy)
+                    mmit_mean_average_precision, top_k_accuracy,
+                    top_k_recall, top_k_precision)
 from .pipelines import Compose
 
 
@@ -178,7 +179,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         metrics = metrics if isinstance(metrics, (list, tuple)) else [metrics]
         allowed_metrics = [
             'top_k_accuracy', 'mean_class_accuracy', 'mean_average_precision',
-            'mmit_mean_average_precision'
+            'mmit_mean_average_precision', 'top_k_recall', 'top_k_precision'
         ]
 
         for metric in metrics:
@@ -221,18 +222,66 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                 continue
 
             if metric in [
-                    'mean_average_precision', 'mmit_mean_average_precision'
+                    'mean_average_precision', 'mmit_mean_average_precision',
             ]:
-                gt_labels = [
+                gt_labels_multilabel = [
                     self.label2array(self.num_classes, label)
                     for label in gt_labels
                 ]
                 if metric == 'mean_average_precision':
-                    mAP = mean_average_precision(results, gt_labels)
+                    mAP = mean_average_precision(results, gt_labels_multilabel)
+                    eval_results['mean_average_precision'] = mAP
+                    log_msg = f'\nmean_average_precision\t{mAP:.4f}'
                 elif metric == 'mmit_mean_average_precision':
-                    mAP = mmit_mean_average_precision(results, gt_labels)
-                eval_results['mean_average_precision'] = mAP
-                log_msg = f'\nmean_average_precision\t{mAP:.4f}'
+                    mAP = mmit_mean_average_precision(results, gt_labels_multilabel)
+                    eval_results['mmit_mean_average_precision'] = mAP
+                    log_msg = f'\nmmit_mean_average_precision\t{mAP:.4f}'
+                print_log(log_msg, logger=logger)
+                continue
+                
+            if metric == 'top_k_recall':
+                gt_labels_multilabel = [
+                    self.label2array(self.num_classes, label)
+                    for label in gt_labels
+                ]
+                topk = metric_options.setdefault('top_k_recall',
+                                                 {}).setdefault(
+                                                     'topk', (5, ))
+                if not isinstance(topk, (int, tuple)):
+                    raise TypeError('topk must be int or tuple of int, '
+                                    f'but got {type(topk)}')
+                if isinstance(topk, int):
+                    topk = (topk, )
+                
+                top_k_rec = top_k_recall(results, gt_labels_multilabel, topk)
+                log_msg = []
+                for k, recall in zip(topk, top_k_rec):
+                    eval_results[f'top{k}_recall'] = recall
+                    log_msg.append(f'\ntop{k}_recall\t{recall:.4f}')
+                log_msg = ''.join(log_msg)
+                print_log(log_msg, logger=logger)
+                continue
+                
+            if metric == 'top_k_precision':
+                gt_labels_multilabel = [
+                    self.label2array(self.num_classes, label)
+                    for label in gt_labels
+                ]
+                topk = metric_options.setdefault('top_k_precision',
+                                                 {}).setdefault(
+                                                     'topk', (1, ))
+                if not isinstance(topk, (int, tuple)):
+                    raise TypeError('topk must be int or tuple of int, '
+                                    f'but got {type(topk)}')
+                if isinstance(topk, int):
+                    topk = (topk, )
+                
+                top_k_prec = top_k_precision(results, gt_labels_multilabel, topk)
+                log_msg = []
+                for k, precision in zip(topk, top_k_prec):
+                    eval_results[f'top{k}_precision'] = precision
+                    log_msg.append(f'\ntop{k}_precision\t{precision:.4f}')
+                log_msg = ''.join(log_msg)
                 print_log(log_msg, logger=logger)
                 continue
 

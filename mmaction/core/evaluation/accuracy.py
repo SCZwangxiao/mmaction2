@@ -109,6 +109,82 @@ def top_k_accuracy(scores, labels, topk=(1, )):
     return res
 
 
+def top_k_precision(scores, labels, topk=(1,3,5,10)):
+    """Calculate top k precision score for multi-label recognition.
+
+    Args:
+        scores (list[np.ndarray]): Prediction scores of different classes for
+            each sample.
+        labels (list[np.ndarray]): Ground truth many-hot vector for each
+            sample.
+        topk (tuple[int]): K value for top_k_precision. Default: (1, ).
+
+    Returns:
+        list[float]: Top k precision score for each k.
+    """
+    assert isinstance(labels[0], np.ndarray), "Currently, metric 'top_k_precision' \
+        could only be used for multi-label recognition!"
+    results = []
+    for score, label in zip(scores, labels):
+        assert isinstance(score, np.ndarray)
+        assert isinstance(label, np.ndarray)
+        assert score.shape == label.shape
+
+        # make label a boolean vector
+        label = (label == 1)
+        # sort scores and corresponding truth values
+        desc_score_indices = np.argsort(score, kind='mergesort')[::-1]
+        label = label[desc_score_indices]
+
+        res = []
+        for k in topk:
+            topk_pre = label[:k].sum() / k
+            res.append(topk_pre)
+        results.append(np.array(res))
+
+    results = np.stack(results).mean(axis=0)
+    results = [res.item() for res in results]
+    return results
+
+
+def top_k_recall(scores, labels, topk=(3,5,10)):
+    """Calculate top k recall score for multi-label recognition.
+
+    Args:
+        scores (list[np.ndarray]): Prediction scores of different classes for
+            each sample.
+        labels (list[np.ndarray]): Ground truth many-hot vector for each
+            sample.
+        topk (tuple[int]): K value for top_k_recall. Default: (1, ).
+
+    Returns:
+        list[float]: Top k recall score for each k.
+    """
+    assert isinstance(labels[0], np.ndarray), "Currently, metric 'top_k_recall' \
+        could only be used for multi-label recognition!"
+    results = []
+    for score, label in zip(scores, labels):
+        assert isinstance(score, np.ndarray)
+        assert isinstance(label, np.ndarray)
+        assert score.shape == label.shape
+
+        # make label a boolean vector
+        label = (label == 1)
+        # sort scores and corresponding truth values
+        desc_score_indices = np.argsort(score, kind='mergesort')[::-1]
+        label = label[desc_score_indices]
+
+        res = []
+        for k in topk:
+            topk_pre = label[:k].sum() / label.sum()
+            res.append(topk_pre)
+        results.append(np.array(res))
+
+    results = np.stack(results).mean(axis=0)
+    results = [res.item() for res in results]
+    return results
+
+
 def mmit_mean_average_precision(scores, labels):
     """Mean average precision for multi-label recognition. Used for reporting
     MMIT style mAP on Multi-Moments in Times. The difference is that this
