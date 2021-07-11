@@ -151,7 +151,7 @@ def inference_recognizer(model,
     score_tuples = tuple(zip(label, scores))
     
     if topk=='all':
-        topk_label = score_tuples
+        topk_label = scores
     else:
         score_sorted = sorted(score_tuples, key=itemgetter(1), reverse=True)
         topk_label = score_sorted[:topk]
