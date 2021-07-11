@@ -70,7 +70,7 @@ test_pipeline = [
         test_mode=True),
     dict(type='DecordDecode'),
     dict(type='Resize', scale=(256, -1)),
-    dict(type='ThreeCrop', crop_size=256),
+    dict(type='CenterCrop', crop_size=256),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCHW'),
     dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
