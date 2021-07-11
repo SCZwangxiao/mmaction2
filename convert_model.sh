@@ -1,0 +1,1 @@
+python ./tools/deployment/pytorch2pt.py configs/recognition/tanet/querytag/tanet_r50_video_1x1x8_kinetics400_ft50e_querytag_v2_rgb.py work_dirs/tanet_r50_video_1x1x8_kinetics400_ft50e_querytag_v2_rgb/epoch_50.pth --output-file work_dirs/tanet_r50_video_1x1x8_kinetics400_ft50e_querytag_v2_rgb/model.pt --shape 1 8 3 256 256 --verify

@@ -10,7 +10,7 @@ from mmaction.models import build_model
 
 def pytorch2pt(model,
                input_shape,
-               output_file='tmp.pt',
+               output_file='model.pt',
                verify=False):
     """Convert pytorch model to onnx model.
 
@@ -30,7 +30,14 @@ def pytorch2pt(model,
 
     print(f'Successfully exported pt model: {output_file}')
     if verify:
-        raise NotImplementedError
+        pytorch_result = model(input_tensor)[0].detach().numpy()
+        jit_result = trace_jit(input_tensor)[0].detach().numpy()
+        # only compare part of results
+        random_class = np.random.randint(pytorch_result.shape[1])
+        assert np.allclose(
+            pytorch_result[:, random_class], jit_result[:, random_class]
+        ), 'The outputs are different between Pytorch and TorchScript'
+        print('The numerical values are same between Pytorch and TorchScript')
 
 
 def parse_args():
@@ -38,11 +45,11 @@ def parse_args():
         description='Convert MMAction2 models to TorchScript')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
-    parser.add_argument('--output-file', type=str, default='tmp.onnx')
+    parser.add_argument('--output-file', type=str, default='model.pt')
     parser.add_argument(
         '--verify',
         action='store_true',
-        help='verify the onnx model output against pytorch output')
+        help='verify the pt model output against pytorch output')
     parser.add_argument(
         '--is-localizer',
         action='store_true',
@@ -51,7 +58,7 @@ def parse_args():
         '--shape',
         type=int,
         nargs='+',
-        default=[1, 8, 3, 224, 224],
+        default=[1, 8, 3, 256, 256],
         help='input video size')
     parser.add_argument(
         '--softmax',
@@ -77,7 +84,10 @@ if __name__ == '__main__':
     # pt.trace does not support kwargs
     if hasattr(model, 'forward_dummy'):
         from functools import partial
-        model.forward = partial(model.forward_dummy, softmax=args.softmax)
+        if args.softmax:
+            model.forward = partial(model.forward_dummy, softmax=args.softmax)
+        else: # partial will cause problem in network visiualization tool like netron
+            model.forward = model.forward_dummy
     elif hasattr(model, '_forward') and args.is_localizer:
         model.forward = model._forward
     else:
@@ -86,7 +96,7 @@ if __name__ == '__main__':
 
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
 
-    # conver model to onnx file
+    # conver model to TorchScript file
     pytorch2pt(
         model,
         args.shape,
