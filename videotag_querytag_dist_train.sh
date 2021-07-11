@@ -1,0 +1,1 @@
+./tools/dist_train.sh configs/tagging/videotag_tsn_r50_nextvlad_video_16_hetu_backbone_querytag_v2_rgb.py 8 --validate --test-best --resume-from work_dirs/videotag_tsn_r50_nextvlad_video_16_hetu_backbone_querytag_v2_rgb/epoch_10.pth
