@@ -347,8 +347,8 @@ def parse_kinetics_splits(level, dataset):
                 label is the video label.
         """
         if test:
-            # video = f'{x[0]}_{int(x[1]):06d}_{int(x[2]):06d}'
-            video = f'{x[1]}_{int(float(x[2])):06d}_{int(float(x[3])):06d}'
+            video = f'{x[0]}_{int(x[1]):06d}_{int(x[2]):06d}'
+            # video = f'{x[1]}_{int(float(x[2])):06d}_{int(float(x[3])):06d}'
             label = -1  # label unknown
             return video, label
 
