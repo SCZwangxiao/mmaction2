@@ -151,7 +151,7 @@ def train_model(model,
                                   **cfg.data.get('val_dataloader', {}))
         val_dataloader = build_dataloader(val_dataset, **dataloader_setting)
         eval_hook = DistEvalHook(val_dataloader, **eval_cfg) if distributed \
-                        else EvalHook(val_dataloader, **eval_cfg)
+            else EvalHook(val_dataloader, **eval_cfg)
         runner.register_hook(eval_hook)
 
     if cfg.resume_from:
