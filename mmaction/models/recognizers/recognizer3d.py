@@ -65,17 +65,22 @@ class Recognizer3D(BaseRecognizer):
 
         if self.feature_extraction:
             # perform spatio-temporal pooling
-            avg_pool = nn.AdaptiveAvgPool3d(1)
-            if isinstance(feat, tuple):
-                feat = [avg_pool(x) for x in feat]
-                # concat them
-                feat = torch.cat(feat, axis=1)
+            if len(feat.size()) == 5: # Traditional 3D recognizer
+                avg_pool = nn.AdaptiveAvgPool3d(1)
+                if isinstance(feat, tuple):
+                    feat = [avg_pool(x) for x in feat]
+                    # concat them
+                    feat = torch.cat(feat, axis=1)
+                else:
+                    feat = avg_pool(feat)
+                # squeeze dimensions
+                feat = feat.reshape((batches, num_segs, -1))
+                # temporal average pooling
+                feat = feat.mean(axis=1)
+            elif len(feat.size()) == 2: # Timesformer
+                pass
             else:
-                feat = avg_pool(feat)
-            # squeeze dimensions
-            feat = feat.reshape((batches, num_segs, -1))
-            # temporal average pooling
-            feat = feat.mean(axis=1)
+                raise NotImplementedError
             return feat
 
         # should have cls_head if not extracting features
