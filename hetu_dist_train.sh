@@ -1,1 +1,2 @@
-./tools/dist_train.sh configs/recognition/tanet/hetu/tanet_r50_video_1x1x8_100e_hetu_rgb.py 8 --validate --test-best --resume-from work_dirs/tanet_r50_video_1x1x8_100e_hetu_rgb/epoch_56.pth
+export http_proxy=http://oversea-squid4.sgp.txyun:11080 https_proxy=http://oversea-squid4.sgp.txyun:11080 && \
+./tools/dist_train.sh configs/recognition/timesformer/hetu/timesformer_video_divST_8x32x1_15e_hetu_rgb.py 8 --validate --test-best
