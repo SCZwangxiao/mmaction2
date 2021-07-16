@@ -94,7 +94,6 @@ def main():
                 with open(output_file, 'wb') as fout:
                     pickle.dump(feat[i,:], fout)
             prog_bar.update()
-        prog_bar.close()
 
 
 if __name__ == '__main__':
