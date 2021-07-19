@@ -1,6 +1,5 @@
 _base_ = [
-    '../../_base_/models/tdn_r50.py',
-    '../../_base_/schedules/sgd_100e.py',
+    '../../_base_/models/tdn_r50.py', '../../_base_/schedules/sgd_100e.py',
     '../../_base_/default_runtime.py'
 ]
 
@@ -99,3 +98,9 @@ total_epochs = 100
 # runtime settings
 checkpoint_config = dict(interval=5)
 work_dir = './work_dirs/tdn_r50_video_320p_5x1x8_100e_kinetics400_rgb/'  # noqa
+log_config = dict(
+    interval=20,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(type='TensorboardLoggerHook'),
+    ])
