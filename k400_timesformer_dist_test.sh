@@ -5,8 +5,8 @@ PORT=${PORT:-29500}
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH \
 python -m torch.distributed.launch --nproc_per_node=8 --master_port=$PORT \
 ./tools/test.py \
-configs/recognition/timesformer/hetu/timesformer_video_divST_8x32x1_15e_hetu_rgb.py \
-work_dirs/timesformer_video_divST_8x32x1_15e_hetu_rgb/epoch_13.pth \
+configs/recognition/tdn/tdn_r50_video_320p_5x1x8_100e_kinetics400_rgb.py \
+work_dirs/tdn_r50_video_320p_5x1x8_100e_kinetics400_rgb/epoch_100.pth \
 --eval mmit_mean_average_precision top_k_precision top_k_recall \
---out work_dirs/timesformer_video_divST_8x32x1_15e_hetu_rgb/test_results.json \
+--out work_dirs/tdn_r50_video_320p_5x1x8_100e_kinetics400_rgb/test_results.json \
 --launcher pytorch
