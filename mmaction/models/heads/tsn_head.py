@@ -1,8 +1,9 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 from mmcv.cnn import normal_init
 
 from ..builder import HEADS
-from .base import AvgConsensus, NeXtVLAD, BaseHead
+from .base import AvgConsensus, BaseHead, NeXtVLAD
 
 
 @HEADS.register_module()

@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 
 
@@ -87,6 +88,45 @@ def mean_class_accuracy(scores, labels):
     return mean_class_acc
 
 
+def top_k_classes(scores, labels, k=10, mode='accurate'):
+    """Calculate the most K accurate (inaccurate) classes.
+
+    Given the prediction scores, ground truth label and top-k value,
+    compute the top K accurate (inaccurate) classes.
+
+    Args:
+        scores (list[np.ndarray]): Prediction scores for each class.
+        labels (list[int] | np.ndarray): Ground truth labels.
+        k (int): Top-k values. Default: 10.
+        mode (str): Comparison mode for Top-k. Options are 'accurate'
+            and 'inaccurate'. Default: 'accurate'.
+
+    Return:
+        list: List of sorted (from high accuracy to low accuracy for
+            'accurate' mode, and from low accuracy to high accuracy for
+            inaccurate mode) top K classes in format of (label_id,
+            acc_ratio).
+    """
+    assert mode in ['accurate', 'inaccurate']
+    pred = np.argmax(scores, axis=1)
+    cf_mat = confusion_matrix(pred, labels).astype(float)
+
+    cls_cnt = cf_mat.sum(axis=1)
+    cls_hit = np.diag(cf_mat)
+    hit_ratio = np.array(
+        [hit / cnt if cnt else 0.0 for cnt, hit in zip(cls_cnt, cls_hit)])
+
+    if mode == 'accurate':
+        max_index = np.argsort(hit_ratio)[-k:][::-1]
+        max_value = hit_ratio[max_index]
+        results = list(zip(max_index, max_value))
+    else:
+        min_index = np.argsort(hit_ratio)[:k]
+        min_value = hit_ratio[min_index]
+        results = list(zip(min_index, min_value))
+    return results
+
+
 def top_k_accuracy(scores, labels, topk=(1, )):
     """Calculate top k accuracy score.
 
@@ -109,7 +149,7 @@ def top_k_accuracy(scores, labels, topk=(1, )):
     return res
 
 
-def top_k_precision(scores, labels, topk=(1,3,5,10)):
+def top_k_precision(scores, labels, topk=(1, 3, 5, 10)):
     """Calculate top k precision score for multi-label recognition.
 
     Args:
@@ -122,8 +162,10 @@ def top_k_precision(scores, labels, topk=(1,3,5,10)):
     Returns:
         list[float]: Top k precision score for each k.
     """
-    assert isinstance(labels[0], np.ndarray), "Currently, metric 'top_k_precision' \
+    assert isinstance(labels[0],
+                      np.ndarray), "Currently, metric 'top_k_precision' \
         could only be used for multi-label recognition!"
+
     results = []
     for score, label in zip(scores, labels):
         assert isinstance(score, np.ndarray)
@@ -147,7 +189,7 @@ def top_k_precision(scores, labels, topk=(1,3,5,10)):
     return results
 
 
-def top_k_recall(scores, labels, topk=(3,5,10)):
+def top_k_recall(scores, labels, topk=(3, 5, 10)):
     """Calculate top k recall score for multi-label recognition.
 
     Args:
@@ -160,8 +202,10 @@ def top_k_recall(scores, labels, topk=(3,5,10)):
     Returns:
         list[float]: Top k recall score for each k.
     """
-    assert isinstance(labels[0], np.ndarray), "Currently, metric 'top_k_recall' \
+    assert isinstance(labels[0],
+                      np.ndarray), "Currently, metric 'top_k_recall' \
         could only be used for multi-label recognition!"
+
     results = []
     for score, label in zip(scores, labels):
         assert isinstance(score, np.ndarray)

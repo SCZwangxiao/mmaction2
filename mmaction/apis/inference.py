@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import os
 import os.path as osp
 import re
@@ -149,12 +150,12 @@ def inference_recognizer(model,
         returned_features = h.layer_outputs if outputs else None
 
     score_tuples = tuple(zip(label, scores))
-    
-    if topk=='all':
+
+    if topk == 'all':
         topk_label = scores
     else:
         score_sorted = sorted(score_tuples, key=itemgetter(1), reverse=True)
         topk_label = score_sorted[:topk]
     if outputs:
-        return top5_label, returned_features
+        return topk_label, returned_features
     return topk_label
