@@ -8,8 +8,7 @@ from .base import AvgConsensus, BaseHead
 
 @HEADS.register_module()
 class TDNHead(BaseHead):
-    """Class head for TSM.
-    """
+    """Class head for TSM."""
 
     def __init__(self,
                  num_classes,
@@ -17,7 +16,7 @@ class TDNHead(BaseHead):
                  loss_cls=dict(type='CrossEntropyLoss'),
                  spatial_type='avg',
                  consensus=dict(type='AvgConsensus', dim=1),
-                 dropout_ratio=0.8,
+                 dropout_ratio=0.5,
                  init_std=0.001,
                  **kwargs):
         super().__init__(num_classes, in_channels, loss_cls, **kwargs)
@@ -45,7 +44,7 @@ class TDNHead(BaseHead):
         else:
             self.dropout = None
         self.fc_cls = nn.Linear(self.in_channels, self.num_classes)
-    
+
     def init_weights(self):
         """Initiate the parameters from scratch."""
         normal_init(self.fc_cls, std=self.init_std)
