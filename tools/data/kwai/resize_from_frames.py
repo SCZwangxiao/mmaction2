@@ -88,14 +88,15 @@ def process_raw_frames(short_side, num_workers, raw_frames_path,
     # Process raw frames
     print('Scaning photo raw frame directories ...')
     raw_frames_files = glob.glob(osp.join(raw_frames_path, '*/*.jpg'))
+    print('Filling task queue ...')
     for file in raw_frames_files:
         task_queue.put(file)
     for _ in range(num_workers):
         task_queue.put(VideoFrameExtractor._StopToken())
 
-    # pbar
+    # Pbar
     total = len(raw_frames_files)
-    pbar = tqdm(total=total, desc='Processing raw frames')
+    pbar = tqdm(total=total, desc='Processing raw frames...')
     prev_size = total
     while task_queue.qsize() > 0:
         cur_size = task_queue.qsize()
@@ -112,15 +113,16 @@ def process_raw_frames(short_side, num_workers, raw_frames_path,
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Resize extracted raw frames')
+    parser = argparse.ArgumentParser(
+        description='Resize extracted raw frames online')
     parser.add_argument(
         '--raw-frames-path',
         default='/home/wangxiao13/dataset/download_video/video_rawframes',
         help='path to MMU extraced frames')
     parser.add_argument(
         '--resized-frames-root',
-        default='/home/wangxiao13/annotation/data/kwai/raw_frames',
-        help='path to MMU extraced frames')
+        default='/home/wangxiao13/annotation/data/relevance/raw_frames',
+        help='path to store resized frames')
     parser.add_argument(
         '--short-side', type=int, default=256, help='short side of video')
     parser.add_argument(
