@@ -7,10 +7,10 @@ from .base import BaseRecognizer
 
 
 @RECOGNIZERS.register_module()
-class Recognizer2D(BaseRecognizer):
-    """2D recognizer model framework."""
+class RecognizerTagRel(BaseRecognizer):
+    """Tag Relevance recognizer model framework."""
 
-    def forward_train(self, imgs, labels, **kwargs):
+    def forward_train(self, imgs, labels, vertical, **kwargs):
         """Defines the computation performed at every call when training."""
 
         assert self.with_cls_head
@@ -40,14 +40,15 @@ class Recognizer2D(BaseRecognizer):
             num_segs = 1
             losses.update(loss_aux)
 
-        cls_score = self.cls_head(x, num_segs)
-        gt_labels = labels.squeeze()
+        cls_score = self.cls_head(x, num_segs, vertical)
+        # gt_labels = labels.squeeze()
+        gt_labels = labels
         loss_cls = self.cls_head.loss(cls_score, gt_labels, **kwargs)
         losses.update(loss_cls)
 
         return losses
 
-    def _do_test(self, imgs):
+    def _do_test(self, imgs, vertical):
         """Defines the computation performed at every call when evaluation,
         testing and gradcam."""
         batches = imgs.shape[0]
@@ -92,7 +93,7 @@ class Recognizer2D(BaseRecognizer):
         #   4) `num_clips` in `SampleFrames` or its subclass if `clip_len != 1`
 
         # should have cls_head if not extracting features
-        cls_score = self.cls_head(x, num_segs)
+        cls_score = self.cls_head(x, num_segs, vertical)
 
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
@@ -137,15 +138,15 @@ class Recognizer2D(BaseRecognizer):
                                       cls_score.size()[0] // batches)
         return cls_score
 
-    def forward_test(self, imgs):
+    def forward_test(self, imgs, vertical):
         """Defines the computation performed at every call when evaluation and
         testing."""
         if self.test_cfg.get('fcn_test', False):
             # If specified, spatially fully-convolutional testing is performed
             assert not self.feature_extraction
             assert self.with_cls_head
-            return self._do_fcn_test(imgs).cpu().numpy()
-        return self._do_test(imgs).cpu().numpy()
+            return self._do_fcn_test(imgs, vertical).cpu().numpy()
+        return self._do_test(imgs, vertical).cpu().numpy()
 
     def forward_dummy(self, imgs, softmax=False):
         """Used for computing network FLOPs.
@@ -154,7 +155,7 @@ class Recognizer2D(BaseRecognizer):
 
         Args:
             imgs (torch.Tensor): Input images.
-
+            softmax (bool): Whether to add sigmoid in the end.
         Returns:
             Tensor: Class score.
         """
@@ -176,7 +177,7 @@ class Recognizer2D(BaseRecognizer):
 
         outs = self.cls_head(x, num_segs)
         if softmax:
-            outs = nn.functional.softmax(outs)
+            outs = torch.sigmoid(outs)
         return (outs, )
 
     def forward_gradcam(self, imgs):

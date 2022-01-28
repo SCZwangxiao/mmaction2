@@ -7,9 +7,11 @@ from .hvu_loss import HVULoss
 from .nll_loss import NLLLoss
 from .ohem_hinge_loss import OHEMHingeLoss
 from .ssn_loss import SSNLoss
+from .asym_focal_loss import AsymmetricFocalLoss
+from .softmax_ce_loss import SoftmaxCELoss
 
 __all__ = [
     'BaseWeightedLoss', 'CrossEntropyLoss', 'NLLLoss', 'BCELossWithLogits',
     'BinaryLogisticRegressionLoss', 'BMNLoss', 'OHEMHingeLoss', 'SSNLoss',
-    'HVULoss'
+    'HVULoss', 'AsymmetricFocalLoss', 'SoftmaxCELoss'
 ]

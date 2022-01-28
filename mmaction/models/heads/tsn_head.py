@@ -3,7 +3,7 @@ import torch.nn as nn
 from mmcv.cnn import normal_init
 
 from ..builder import HEADS
-from .base import AvgConsensus, BaseHead, NeXtVLAD
+from .base import AvgConsensus, BaseHead
 
 
 @HEADS.register_module()

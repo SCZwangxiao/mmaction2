@@ -223,22 +223,23 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                 continue
 
             if metric in [
-                    'mean_average_precision',
-                    'mmit_mean_average_precision',
+                    'mean_average_precision', 'mmit_mean_average_precision'
             ]:
-                gt_labels_multilabel = [
+                gt_labels_arrays = [
                     self.label2array(self.num_classes, label)
                     for label in gt_labels
                 ]
                 if metric == 'mean_average_precision':
-
-                    mAP = mean_average_precision(results, gt_labels_multilabel)
+                    mAP = mean_average_precision(results, gt_labels_arrays)
                     eval_results['mean_average_precision'] = mAP
                     log_msg = f'\nmean_average_precision\t{mAP:.4f}'
+                elif metric == 'mmit_mean_average_precision':
                     mAP = mmit_mean_average_precision(results,
-                                                      gt_labels_multilabel)
-                    eval_results['mean_average_precision'] = mAP
-                    log_msg = f'\nmean_average_precision\t{mAP:.4f}'
+                                                      gt_labels_arrays)
+                    eval_results['mmit_mean_average_precision'] = mAP
+                    log_msg = f'\nmmit_mean_average_precision\t{mAP:.4f}'
+                print_log(log_msg, logger=logger)
+                continue
 
             if metric == 'top_k_recall':
                 gt_labels_multilabel = [

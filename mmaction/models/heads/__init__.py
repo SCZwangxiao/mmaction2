@@ -16,10 +16,13 @@ from .trn_head import TRNHead
 from .tsm_head import TSMHead
 from .tsn_head import TSNHead
 from .x3d_head import X3DHead
+from .vanilla_head import VanillaHead
+from .nextvlad_head import NextVLADHead
+from .query2label_head import Query2LabelHead
 
 __all__ = [
     'TSNHead', 'I3DHead', 'BaseHead', 'TSMHead', 'SlowFastHead', 'SSNHead',
     'TPNHead', 'AudioTSNHead', 'X3DHead', 'BBoxHeadAVA', 'AVARoIHead',
     'FBOHead', 'LFBInferHead', 'TRNHead', 'TimeSformerHead', 'ACRNHead',
-    'STGCNHead'
+    'STGCNHead', 'VanillaHead', 'NextVLADHead', 'Query2LabelHead'
 ]
