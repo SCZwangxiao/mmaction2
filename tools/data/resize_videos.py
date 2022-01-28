@@ -47,7 +47,7 @@ def resize_videos(vid_item):
                f'{"-vsync vfr" if args.remove_dup else ""} '
                f'-c:v libx264 {"-g 16" if args.dense else ""} '
                f'-an {out_full_path} -y')
-    os.popen(cmd)
+    os.system(cmd)
     print(f'{vid_path} done')
     sys.stdout.flush()
     return True

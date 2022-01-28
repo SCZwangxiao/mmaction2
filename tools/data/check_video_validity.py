@@ -7,7 +7,7 @@ import multiprocessing as mp
 
 import decord
 
-video_file_path = "/home/wangxiao13/annotation/mmaction2/data/querytag/videos"
+video_file_path = "/home/wangxiao13/dataset/download_video/video"
 
 video_files = glob.glob(os.path.join(video_file_path, "*.mp4"))
 print(f'Checking video files in {video_file_path}...')
