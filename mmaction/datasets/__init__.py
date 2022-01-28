@@ -12,13 +12,13 @@ from .builder import (BLENDINGS, DATASETS, PIPELINES, build_dataloader,
 from .dataset_wrappers import ConcatDataset, RepeatDataset
 from .hvu_dataset import HVUDataset
 from .image_dataset import ImageDataset
+from .kwai_feature_dataset import KwaiFeatureDataset
+from .kwai_rawframe_dataset import KwaiRawframeDataset
 from .pose_dataset import PoseDataset
 from .rawframe_dataset import RawframeDataset
 from .rawvideo_dataset import RawVideoDataset
 from .ssn_dataset import SSNDataset
 from .video_dataset import VideoDataset
-from .kwai_rawframe_dataset import KwaiRawframeDataset
-from .kwai_feature_dataset import KwaiFeatureDataset
 
 __all__ = [
     'VideoDataset', 'build_dataloader', 'build_dataset', 'RepeatDataset',
@@ -26,6 +26,6 @@ __all__ = [
     'HVUDataset', 'AudioDataset', 'AudioFeatureDataset', 'ImageDataset',
     'RawVideoDataset', 'AVADataset', 'AudioVisualDataset',
     'BaseMiniBatchBlending', 'CutmixBlending', 'MixupBlending', 'DATASETS',
-    'PIPELINES', 'BLENDINGS', 'PoseDataset', 'ConcatDataset', 'KwaiRawframeDataset',
-    'KwaiFeatureDataset'
+    'PIPELINES', 'BLENDINGS', 'PoseDataset', 'ConcatDataset',
+    'KwaiRawframeDataset', 'KwaiFeatureDataset'
 ]

@@ -3,8 +3,8 @@ import copy
 import os
 import os.path as osp
 
-import torch
 import numpy as np
+import torch
 
 from .base import BaseDataset
 from .builder import DATASETS
@@ -97,7 +97,8 @@ class KwaiRawframeDataset(BaseDataset):
                 if len(frame_inds) >= self.total_clips:
                     frame_inds = np.array(frame_inds)
                     total_frames = frame_inds.shape[0]
-                    frame_inds = frame_inds[np.linspace(0,total_frames-1,self.total_clips).astype(np.int)]
+                    frame_inds = frame_inds[np.linspace(
+                        0, total_frames - 1, self.total_clips).astype(np.int)]
                     video_info['frame_inds'] = frame_inds.astype(np.int)
                     video_infos.append(video_info)
 
@@ -207,7 +208,7 @@ class OldKwaiRawframeDataset(BaseDataset):
                     photo_id = int(line_split[idx].split('.')[0])
                 else:
                     photo_id = int(line_split[idx])
-                
+
                 if self.data_prefix is not None:
                     frame_dir = osp.join(self.data_prefix, str(photo_id))
                 video_info['photo_id'] = photo_id
@@ -234,7 +235,8 @@ class OldKwaiRawframeDataset(BaseDataset):
                         frame_inds.append(idx)
                     frame_inds = np.array(frame_inds)
                     total_frames = frame_inds.shape[0]
-                    frame_inds = frame_inds[np.linspace(0,total_frames-1,self.total_clips).astype(np.int)]
+                    frame_inds = frame_inds[np.linspace(
+                        0, total_frames - 1, self.total_clips).astype(np.int)]
                     video_info['frame_inds'] = frame_inds.astype(np.int)
 
                 video_infos.append(video_info)

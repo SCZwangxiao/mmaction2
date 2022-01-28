@@ -11,14 +11,14 @@ class AsymmetricFocalLoss(BaseWeightedLoss):
     ''' Notice - optimized version, minimizes memory allocation and gpu uploading,
     favors inplace operations'''
 
-    def __init__(self, 
-                 gamma_neg=0, 
-                 gamma_pos=0, 
+    def __init__(self,
+                 gamma_neg=0,
+                 gamma_pos=0,
                  beta_pos=1,
                  beta_neg=1,
-                 clip=0.05, 
-                 eps=1e-5, 
-                 disable_torch_grad_focal_loss=False, 
+                 clip=0.05,
+                 eps=1e-5,
+                 disable_torch_grad_focal_loss=False,
                  loss_weight=1.0):
         super().__init__(loss_weight=loss_weight)
         self.gamma_neg = gamma_neg
@@ -51,8 +51,10 @@ class AsymmetricFocalLoss(BaseWeightedLoss):
             self.xs_neg.add_(self.clip).clamp_(max=1)
 
         # Basic CE calculation
-        self.loss = self.beta_pos * self.targets * torch.log(self.xs_pos.clamp(min=self.eps))
-        self.loss.add_(self.beta_neg * self.anti_targets * torch.log(self.xs_neg.clamp(min=self.eps)))
+        self.loss = self.beta_pos * self.targets * torch.log(
+            self.xs_pos.clamp(min=self.eps))
+        self.loss.add_(self.beta_neg * self.anti_targets *
+                       torch.log(self.xs_neg.clamp(min=self.eps)))
 
         # Asymmetric Focusing
         if self.gamma_neg > 0 or self.gamma_pos > 0:
@@ -62,18 +64,22 @@ class AsymmetricFocalLoss(BaseWeightedLoss):
                     #     torch._C.set_grad_enabled(False)
                     self.xs_pos = self.xs_pos * self.targets
                     self.xs_neg = self.xs_neg * self.anti_targets
-                    self.asymmetric_w = torch.pow(1 - self.xs_pos - self.xs_neg,
-                                                self.gamma_pos * self.targets + self.gamma_neg * self.anti_targets)
+                    self.asymmetric_w = torch.pow(
+                        1 - self.xs_pos - self.xs_neg,
+                        self.gamma_pos * self.targets +
+                        self.gamma_neg * self.anti_targets)
                     # if self.disable_torch_grad_focal_loss:
                     #     torch._C.set_grad_enabled(True)
                 self.loss *= self.asymmetric_w
             else:
                 self.xs_pos = self.xs_pos * self.targets
                 self.xs_neg = self.xs_neg * self.anti_targets
-                self.asymmetric_w = torch.pow(1 - self.xs_pos - self.xs_neg,
-                                            self.gamma_pos * self.targets + self.gamma_neg * self.anti_targets)   
-                self.loss *= self.asymmetric_w         
-        _loss = - self.loss.sum() / x.size(0)
+                self.asymmetric_w = torch.pow(
+                    1 - self.xs_pos - self.xs_neg,
+                    self.gamma_pos * self.targets +
+                    self.gamma_neg * self.anti_targets)
+                self.loss *= self.asymmetric_w
+        _loss = -self.loss.sum() / x.size(0)
         _loss = _loss / y.size(1) * 1000
 
         return _loss

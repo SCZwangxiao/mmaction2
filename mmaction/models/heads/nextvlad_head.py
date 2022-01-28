@@ -4,9 +4,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import trunc_normal_init
 
-from ...core import mmit_mean_average_precision, mean_average_precision
+from ...core import mean_average_precision, mmit_mean_average_precision
 from ..builder import HEADS
 from .base import BaseHead
+
 
 class NeXtVLAD(nn.Module):
     """This is a PyTorch implementation of the NeXtVLAD + Context Gating model.
@@ -42,25 +43,22 @@ class NeXtVLAD(nn.Module):
 
         self.fc_expansion = nn.Linear(feature_size, expansion * feature_size)
         self.fc_group_attention = nn.Sequential(
-            nn.Linear(expansion * feature_size, groups), 
-            nn.Sigmoid())
+            nn.Linear(expansion * feature_size, groups), nn.Sigmoid())
         self.activation_bn = nn.BatchNorm1d(groups * cluster_size)
         self.vlad_bn = nn.BatchNorm1d(self.group_feature_size * cluster_size)
 
         # Context Gating
         self.cg_proj = nn.Sequential(
-            nn.Dropout(dropout), 
-            nn.Linear(self.vlad_size, hidden_size),
+            nn.Dropout(dropout), nn.Linear(self.vlad_size, hidden_size),
             nn.BatchNorm1d(hidden_size))
         if gating_reduction:
             self.gate1 = nn.Sequential(
                 nn.Linear(hidden_size, hidden_size // gating_reduction),
-                nn.BatchNorm1d(hidden_size // gating_reduction), 
-                nn.ReLU())
+                nn.BatchNorm1d(hidden_size // gating_reduction), nn.ReLU())
             self.gate2 = nn.Sequential(
                 nn.Linear(hidden_size // gating_reduction, hidden_size),
                 nn.Sigmoid())
-    
+
     def init_weights(self):
         nn.init.kaiming_normal_(self.cluster_weights)
         nn.init.kaiming_normal_(self.c)
@@ -150,7 +148,7 @@ class NextVLADHead(BaseHead):
                  use_tde=False,
                  tau=16,
                  alpha=3,
-                 gamma=1/32,
+                 gamma=1 / 32,
                  **kwargs):
         super().__init__(num_classes, in_channels, loss_cls, **kwargs)
         self.dropout_ratio = dropout_ratio
@@ -177,13 +175,14 @@ class NextVLADHead(BaseHead):
         else:
             self.dropout = None
         if self.use_tde:
-            self.register_buffer('x_mean', torch.zeros((1, hidden_size), requires_grad=False))
+            self.register_buffer(
+                'x_mean', torch.zeros((1, hidden_size), requires_grad=False))
         self.fc_cls = nn.Linear(hidden_size, self.num_classes, bias=False)
 
     def init_weights(self):
         """Initiate the parameters from scratch."""
         self.next_vlad.init_weights()
-    
+
     def cos_sim(self, x_normed, x_mean):
         """
         Args:
@@ -195,7 +194,8 @@ class NextVLADHead(BaseHead):
         sim = x_normed @ x_mean.t()
         # [N, 1]
         x_mean = x_mean.squeeze(0)
-        sim = sim / torch.norm(x_normed,dim=1,keepdim=True) / torch.norm(x_mean)
+        sim = sim / torch.norm(
+            x_normed, dim=1, keepdim=True) / torch.norm(x_mean)
         return sim
 
     def forward(self, x, num_segs, vertical=None):
@@ -209,15 +209,18 @@ class NextVLADHead(BaseHead):
         x = self.next_vlad(x)
         # [N, hidden_size]
         if self.use_tde:
-            self.x_mean = 0.9*self.x_mean + x.detach().mean(0, keepdim=True)
+            self.x_mean = 0.9 * self.x_mean + x.detach().mean(0, keepdim=True)
         x_normed = F.normalize(x, dim=1)
         # [N, hidden_size]
         if self.use_tde and not self.training:
-            x_normed = x_normed - self.alpha * self.cos_sim(x_normed, self.x_mean) * F.normalize(self.x_mean, dim=1)
+            x_normed = x_normed - self.alpha * self.cos_sim(
+                x_normed, self.x_mean) * F.normalize(
+                    self.x_mean, dim=1)
         if self.dropout is not None:
             x_normed = self.dropout(x_normed)
         # [N, num_classes]
-        classifier_norm = torch.norm(self.fc_cls.weight, 2, 1).unsqueeze(0) + self.gamma
+        classifier_norm = torch.norm(self.fc_cls.weight, 2,
+                                     1).unsqueeze(0) + self.gamma
         # [1, hidden_size]
         cls_score = self.tau * self.fc_cls(x_normed) / classifier_norm
         # [N, num_classes]
@@ -243,12 +246,12 @@ class NextVLADHead(BaseHead):
         x = x.reshape((-1, num_segs) + x.shape[1:]).squeeze(3).squeeze(3)
         # [N, num_segs, in_channels]
         return self.forward_offline(x, num_segs, None)
-    
+
     def build_labels(self, cls_score, sparse_labels):
         batch_size = len(sparse_labels)
         labels = torch.zeros_like(cls_score)
         for b, sparse_label in enumerate(sparse_labels):
-            labels[b,sparse_label] = 1.
+            labels[b, sparse_label] = 1.
         return labels
 
     def loss(self, cls_score, labels, **kwargs):
@@ -263,9 +266,9 @@ class NextVLADHead(BaseHead):
             and 'top1_acc', 'top5_acc'(optional).
         """
         losses = dict()
-        
+
         labels = self.build_labels(cls_score, labels)
-        
+
         if labels.shape == torch.Size([]):
             labels = labels.unsqueeze(0)
         elif labels.dim() == 1 and labels.size()[0] == self.num_classes \
@@ -287,9 +290,11 @@ class NextVLADHead(BaseHead):
             cls_score_cpu = cls_score.detach().cpu().numpy()
             labels_cpu = labels.detach().cpu().numpy()
             mAP_sample = mmit_mean_average_precision(cls_score_cpu, labels_cpu)
-            losses['mAP_sample'] = torch.tensor(mAP_sample, device=cls_score.device)
+            losses['mAP_sample'] = torch.tensor(
+                mAP_sample, device=cls_score.device)
             mAP_label = mean_average_precision(cls_score_cpu, labels_cpu)
-            losses['mAP_label'] = torch.tensor(mAP_label, device=cls_score.device)
+            losses['mAP_label'] = torch.tensor(
+                mAP_label, device=cls_score.device)
             if self.label_smooth_eps != 0:
                 labels = ((1 - self.label_smooth_eps) * labels +
                           self.label_smooth_eps / self.num_classes)

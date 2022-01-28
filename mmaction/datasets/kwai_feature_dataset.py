@@ -3,8 +3,8 @@ import copy
 import os.path as osp
 
 import lmdb
-import torch
 import numpy as np
+import torch
 from mmcv.parallel import DataContainer
 
 from .base import BaseDataset
@@ -71,7 +71,8 @@ class KwaiFeatureDataset(BaseDataset):
             power=0,
             dynamic_length=False)
         if self.data_prefix is not None:
-            self.lmdb_path = osp.join(self.data_prefix, lmdb_tmpl.format(split))
+            self.lmdb_path = osp.join(self.data_prefix,
+                                      lmdb_tmpl.format(split))
             self.np_path = osp.join(self.data_prefix, split)
 
     def load_annotations(self):
@@ -99,12 +100,16 @@ class KwaiFeatureDataset(BaseDataset):
                 video_info['label'] = label
                 video_infos.append(video_info)
         return video_infos
-    
+
     def load_feature(self, photo_id):
         if self.io_backend == 'lmdb':
-            env = lmdb.open(self.lmdb_path, subdir=osp.isdir(self.lmdb_path),
-                            readonly=True, lock=False,
-                            readahead=False, meminit=False)
+            env = lmdb.open(
+                self.lmdb_path,
+                subdir=osp.isdir(self.lmdb_path),
+                readonly=True,
+                lock=False,
+                readahead=False,
+                meminit=False)
             with env.begin(write=False) as txn:
                 byteflow = txn.get(photo_id.encode())
                 try:
@@ -112,14 +117,14 @@ class KwaiFeatureDataset(BaseDataset):
                     imgs = np.copy(imgs)
                 except TypeError:
                     print(f'Feature of photo_id {photo_id} not found!')
-                    imgs = np.zeros(8*2048)
+                    imgs = np.zeros(8 * 2048)
                 imgs = imgs.reshape(self.total_clips, -1)
-                imgs = imgs[None,:,:]
+                imgs = imgs[None, :, :]
         elif self.io_backend == 'disk':
             imgs = np.load(osp.join(self.np_path, f'{photo_id}.npy'))
-            imgs = imgs[None,:,:]
+            imgs = imgs[None, :, :]
         return imgs
-    
+
     def prepare_frames(self, idx):
         """Prepare the frames for training given the index."""
         results = copy.deepcopy(self.video_infos[idx])
@@ -128,9 +133,7 @@ class KwaiFeatureDataset(BaseDataset):
         results['imgs'] = imgs
         results['modality'] = self.modality
         # prepare tensor in getitem
-        results['label'] = DataContainer(
-            data=torch.tensor(results['label'])
-        )
+        results['label'] = DataContainer(data=torch.tensor(results['label']))
         return self.pipeline(results)
 
     def prepare_train_frames(self, idx):

@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from mmcv.cnn import trunc_normal_init
 
-from ...core import mmit_mean_average_precision, mean_average_precision
+from ...core import mean_average_precision, mmit_mean_average_precision
 from ..builder import HEADS
 from .base import BaseHead
 
@@ -63,12 +63,12 @@ class VanillaHead(BaseHead):
         cls_score = self.fc_cls(x)
         # [N, num_classes]
         return cls_score
-    
+
     def build_labels(self, cls_score, sparse_labels):
         batch_size = len(sparse_labels)
         labels = torch.zeros_like(cls_score)
         for b, sparse_label in enumerate(sparse_labels):
-            labels[b,sparse_label] = 1.
+            labels[b, sparse_label] = 1.
         return labels
 
     def loss(self, cls_score, labels, **kwargs):
@@ -83,7 +83,7 @@ class VanillaHead(BaseHead):
             and 'top1_acc', 'top5_acc'(optional).
         """
         losses = dict()
-        
+
         labels = self.build_labels(cls_score, labels)
         if labels.shape == torch.Size([]):
             labels = labels.unsqueeze(0)
@@ -106,9 +106,11 @@ class VanillaHead(BaseHead):
             cls_score_cpu = cls_score.detach().cpu().numpy()
             labels_cpu = labels.detach().cpu().numpy()
             mAP_sample = mmit_mean_average_precision(cls_score_cpu, labels_cpu)
-            losses['mAP_sample'] = torch.tensor(mAP_sample, device=cls_score.device)
+            losses['mAP_sample'] = torch.tensor(
+                mAP_sample, device=cls_score.device)
             mAP_label = mean_average_precision(cls_score_cpu, labels_cpu)
-            losses['mAP_label'] = torch.tensor(mAP_label, device=cls_score.device)
+            losses['mAP_label'] = torch.tensor(
+                mAP_label, device=cls_score.device)
             if self.label_smooth_eps != 0:
                 labels = ((1 - self.label_smooth_eps) * labels +
                           self.label_smooth_eps / self.num_classes)

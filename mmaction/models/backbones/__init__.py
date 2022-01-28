@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from .c3d import C3D
+from .indentity import Indentity
 from .mobilenet_v2 import MobileNetV2
 from .mobilenet_v2_tsm import MobileNetV2TSM
 from .resnet import ResNet
@@ -15,7 +16,6 @@ from .stgcn import STGCN
 from .tanet import TANet
 from .timesformer import TimeSformer
 from .x3d import X3D
-from .indentity import Indentity
 
 __all__ = [
     'C3D', 'ResNet', 'ResNet3d', 'ResNetTSM', 'ResNet2Plus1d',

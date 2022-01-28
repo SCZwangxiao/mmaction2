@@ -11,8 +11,7 @@ class SoftmaxCELoss(BaseWeightedLoss):
     ''' Notice - optimized version, minimizes memory allocation and gpu uploading,
     favors inplace operations'''
 
-    def __init__(self,  
-                 loss_weight=1.0):
+    def __init__(self, loss_weight=1.0):
         super().__init__(loss_weight=loss_weight)
 
     def _forward(self, x, y):

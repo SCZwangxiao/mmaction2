@@ -6,6 +6,8 @@ from .fbo_head import FBOHead
 from .i3d_head import I3DHead
 from .lfb_infer_head import LFBInferHead
 from .misc_head import ACRNHead
+from .nextvlad_head import NextVLADHead
+from .query2label_head import Query2LabelHead
 from .roi_head import AVARoIHead
 from .slowfast_head import SlowFastHead
 from .ssn_head import SSNHead
@@ -15,10 +17,8 @@ from .tpn_head import TPNHead
 from .trn_head import TRNHead
 from .tsm_head import TSMHead
 from .tsn_head import TSNHead
-from .x3d_head import X3DHead
 from .vanilla_head import VanillaHead
-from .nextvlad_head import NextVLADHead
-from .query2label_head import Query2LabelHead
+from .x3d_head import X3DHead
 
 __all__ = [
     'TSNHead', 'I3DHead', 'BaseHead', 'TSMHead', 'SlowFastHead', 'SSNHead',
