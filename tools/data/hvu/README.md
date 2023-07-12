@@ -43,7 +43,7 @@ bash download_videos.sh
 
 This part is **optional** if you only want to use the video loader.
 
-Before extracting, please refer to [install.md](/docs/install.md) for installing [denseflow](https://github.com/open-mmlab/denseflow).
+Before extracting, please refer to [install.md](/docs/en/get_started/installation.md) for installing [denseflow](https://github.com/open-mmlab/denseflow).
 
 You can use the following script to extract both RGB and Flow frames.
 
@@ -52,7 +52,7 @@ bash extract_frames.sh
 ```
 
 By default, we generate frames with short edge resized to 256.
-More details can be found in [data_preparation](/docs/data_preparation.md)
+More details can be found in [prepare_dataset](/docs/en/user_guides/prepare_dataset.md)
 
 ## Step 4. Generate File List
 
@@ -80,8 +80,8 @@ contains tags of a specific category, can be handled with `VideoDataset` or `Raw
 recognition models can be trained with `BCELossWithLogits`.
 
 The following command generates file list for the tag category ${category}, note that the tag category you
-specified should be in the 6 tag categories available in HVU: ['action', 'attribute', 'concept', 'event',
-'object', 'scene'].
+specified should be in the 6 tag categories available in HVU: \['action', 'attribute', 'concept', 'event',
+'object', 'scene'\].
 
 ```shell
 python generate_sub_file_list.py path/to/filelist.json ${category}
@@ -120,4 +120,4 @@ mmaction2
 
 ```
 
-For training and evaluating on HVU, please refer to [getting_started](/docs/getting_started.md).
+For training and evaluating on HVU, please refer to [Training and Test Tutorial](/docs/en/user_guides/train_test.md).

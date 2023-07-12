@@ -1,12 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+from typing import Dict, List, Optional, Union
+
 import torch.nn as nn
 import torch.utils.checkpoint as cp
-from mmcv.cnn import ConvModule, constant_init, kaiming_init
-from mmcv.runner import load_checkpoint
-from torch.nn.modules.batchnorm import _BatchNorm
+from mmcv.cnn import ConvModule
+from mmengine.model import BaseModule
+from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
 
-from ...utils import get_root_logger
-from ..builder import BACKBONES
+from mmaction.registry import MODELS
 
 
 def make_divisible(value, divisor, min_value=None, min_ratio=0.9):
@@ -18,9 +19,10 @@ def make_divisible(value, divisor, min_value=None, min_ratio=0.9):
         value (int): The original channel number.
         divisor (int): The divisor to fully divide the channel number.
         min_value (int, optional): The minimum value of the output channel.
-            Default: None, means that the minimum value equal to the divisor.
+            Defaults to None, means that the minimum value equal to the
+            divisor.
         min_ratio (float, optional): The minimum ratio of the rounded channel
-            number to the original channel number. Default: 0.9.
+            number to the original channel number. Defaults to 0.9.
     Returns:
         int: The modified output channel number
     """
@@ -44,13 +46,13 @@ class InvertedResidual(nn.Module):
         expand_ratio (int): adjusts number of channels of the hidden layer
             in InvertedResidual by this amount.
         conv_cfg (dict): Config dict for convolution layer.
-            Default: None, which means using conv2d.
+            Defaults to None, which means using conv2d.
         norm_cfg (dict): Config dict for normalization layer.
-            Default: dict(type='BN').
+            Defaults to dict(type='BN').
         act_cfg (dict): Config dict for activation layer.
-            Default: dict(type='ReLU6').
+            Defaults to dict(type='ReLU6').
         with_cp (bool): Use checkpoint or not. Using checkpoint will save some
-            memory while slowing down the training speed. Default: False.
+            memory while slowing down the training speed. Defaults to False.
     Returns:
         Tensor: The output tensor
     """
@@ -104,6 +106,14 @@ class InvertedResidual(nn.Module):
         self.conv = nn.Sequential(*layers)
 
     def forward(self, x):
+        """Defines the computation performed at every call.
+
+        Args:
+            x (Tensor): The input data.
+
+        Returns:
+            Tensor: The output of the module.
+        """
 
         def _inner_forward(x):
             if self.use_res_connect:
@@ -119,30 +129,35 @@ class InvertedResidual(nn.Module):
         return out
 
 
-@BACKBONES.register_module()
-class MobileNetV2(nn.Module):
+@MODELS.register_module()
+class MobileNetV2(BaseModule):
     """MobileNetV2 backbone.
 
     Args:
-        pretrained (str | None): Name of pretrained model. Default: None.
+        pretrained (str | None): Name of pretrained model. Defaults to None.
         widen_factor (float): Width multiplier, multiply number of
-            channels in each layer by this amount. Default: 1.0.
+            channels in each layer by this amount. Defaults to 1.0.
         out_indices (None or Sequence[int]): Output from which stages.
-            Default: (7, ).
+            Defaults to (7, ).
         frozen_stages (int): Stages to be frozen (all param fixed). Note that
-            the last stage in ``MobileNetV2`` is ``conv2``. Default: -1,
+            the last stage in ``MobileNetV2`` is ``conv2``. Defaults to -1,
             which means not freezing any parameters.
         conv_cfg (dict): Config dict for convolution layer.
-            Default: None, which means using conv2d.
+            Defaults to None, which means using conv2d.
         norm_cfg (dict): Config dict for normalization layer.
-            Default: dict(type='BN').
+            Defaults to dict(type='BN').
         act_cfg (dict): Config dict for activation layer.
-            Default: dict(type='ReLU6').
+            Defaults to dict(type='ReLU6').
         norm_eval (bool): Whether to set norm layers to eval mode, namely,
             freeze running stats (mean and var). Note: Effect on Batch Norm
-            and its variants only. Default: False.
+            and its variants only. Defaults to False.
         with_cp (bool): Use checkpoint or not. Using checkpoint will save some
-            memory while slowing down the training speed. Default: False.
+            memory while slowing down the training speed. Defaults to False.
+        init_cfg (dict or list[dict]): Initialization config dict. Defaults to
+            ``[
+            dict(type='Kaiming', layer='Conv2d',),
+            dict(type='Constant', layer=['GroupNorm', '_BatchNorm'], val=1.)
+            ]``.
     """
 
     # Parameters to build layers. 4 parameters are needed to construct a
@@ -160,8 +175,17 @@ class MobileNetV2(nn.Module):
                  norm_cfg=dict(type='BN2d', requires_grad=True),
                  act_cfg=dict(type='ReLU6', inplace=True),
                  norm_eval=False,
-                 with_cp=False):
-        super().__init__()
+                 with_cp=False,
+                 init_cfg: Optional[Union[Dict, List[Dict]]] = [
+                     dict(type='Kaiming', layer='Conv2d'),
+                     dict(
+                         type='Constant',
+                         layer=['GroupNorm', '_BatchNorm'],
+                         val=1.)
+                 ]):
+        if pretrained is not None:
+            init_cfg = dict(type='Pretrained', checkpoint=pretrained)
+        super().__init__(init_cfg=init_cfg)
         self.pretrained = pretrained
         self.widen_factor = widen_factor
         self.out_indices = out_indices
@@ -230,9 +254,9 @@ class MobileNetV2(nn.Module):
         Args:
             out_channels (int): out_channels of block.
             num_blocks (int): number of blocks.
-            stride (int): stride of the first block. Default: 1
+            stride (int): stride of the first block. Defaults to 1
             expand_ratio (int): Expand the number of channels of the
-                hidden layer in InvertedResidual by this ratio. Default: 6.
+                hidden layer in InvertedResidual by this ratio. Defaults to 6.
         """
         layers = []
         for i in range(num_blocks):
@@ -252,20 +276,16 @@ class MobileNetV2(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def init_weights(self):
-        if isinstance(self.pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, self.pretrained, strict=False, logger=logger)
-        elif self.pretrained is None:
-            for m in self.modules():
-                if isinstance(m, nn.Conv2d):
-                    kaiming_init(m)
-                elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
-                    constant_init(m, 1)
-        else:
-            raise TypeError('pretrained must be a str or None')
-
     def forward(self, x):
+        """Defines the computation performed at every call.
+
+        Args:
+            x (Tensor): The input data.
+
+        Returns:
+            Tensor or Tuple[Tensor]: The feature of the input samples extracted
+            by the backbone.
+        """
         x = self.conv1(x)
 
         outs = []
@@ -281,6 +301,8 @@ class MobileNetV2(nn.Module):
         return tuple(outs)
 
     def _freeze_stages(self):
+        """Prevent all the parameters from being optimized before
+        ``self.frozen_stages``."""
         if self.frozen_stages >= 0:
             self.conv1.eval()
             for param in self.conv1.parameters():
@@ -293,6 +315,7 @@ class MobileNetV2(nn.Module):
                 param.requires_grad = False
 
     def train(self, mode=True):
+        """Set the optimization status when training."""
         super(MobileNetV2, self).train(mode)
         self._freeze_stages()
         if mode and self.norm_eval:

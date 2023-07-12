@@ -1,9 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from .inference import inference_recognizer, init_recognizer
-from .test import multi_gpu_test, single_gpu_test
-from .train import train_model
+from .inference import (detection_inference, inference_recognizer,
+                        init_recognizer, pose_inference)
+from .inferencers import *  # NOQA
 
 __all__ = [
-    'train_model', 'init_recognizer', 'inference_recognizer', 'multi_gpu_test',
-    'single_gpu_test'
+    'init_recognizer', 'inference_recognizer', 'detection_inference',
+    'pose_inference'
 ]

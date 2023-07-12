@@ -33,19 +33,26 @@ bash download_annotations.sh ${DATASET}
 
 对于无法进行姿态提取的用户，这里提供了上述流程的输出结果，分别对应 NTURGB-D 数据集的 4 个部分：
 
-- ntu60_xsub_train: https://download.openmmlab.com/mmaction/posec3d/ntu60_xsub_train.pkl
-- ntu60_xsub_val: https://download.openmmlab.com/mmaction/posec3d/ntu60_xsub_val.pkl
-- ntu120_xsub_train: https://download.openmmlab.com/mmaction/posec3d/ntu120_xsub_train.pkl
-- ntu120_xsub_val: https://download.openmmlab.com/mmaction/posec3d/ntu120_xsub_val.pkl
-- hmdb51: https://download.openmmlab.com/mmaction/posec3d/hmdb51.pkl
-- ucf101: https://download.openmmlab.com/mmaction/posec3d/ucf101.pkl
+- NTURGB+D \[2D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/ntu60_2d.pkl
+- NTURGB+D \[3D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/ntu60_3d.pkl
+- NTURGB+D 120 \[2D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/ntu120_2d.pkl
+- NTURGB+D 120 \[3D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/ntu120_3d.pkl
+- GYM \[2D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/gym_2d.pkl
+  - GYM 2D 姿态标注文件是基于运动员的真实标注框生成的，用户可以从这个[链接](https://download.openmmlab.com/mmaction/pyskl/data/gym/gym_gt_bboxes.pkl)下载真实标注框。如果你在项目中使用了该数据，请引用 [PoseConv3D](https://arxiv.org/abs/2104.13586)
+- UCF101 \[2D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/ucf101_2d.pkl
+- HMDB51 \[2D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/hmdb51_2d.pkl
+- Diving48 \[2D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/diving48_2d.pkl
+- Kinetics400 \[2D Skeleton\]: https://download.openmmlab.com/mmaction/v1.0/skeleton/data/k400_2d.pkl (只包含数据列表，没有姿态标注文件)
 
-若想生成单个视频的 2D 姿态标注文件，首先，用户需要由源码安装 mmdetection 和 mmpose。之后，用户需要在 `ntu_pose_extraction.py` 中指定 `mmdet_root` 和 `mmpose_root` 变量。
-最后，用户可使用以下脚本进行 NTURGB+D 视频的姿态提取：
+由于 Kinetics400 数据集姿态标注文件过大，我们不提供阿里云的下载链接，请使用此[链接](https://mycuhk-my.sharepoint.com/:u:/g/personal/1155136485_link_cuhk_edu_hk/EeyDCVskqLtClMVVwqD53acBF2FEwkctp3vtRbkLfnKSTw?e=B3SZlM)下载 `kpfiles`，解压到 `$MMACTION2/data/k400` 目录下，用于 Kinetics400 的训练和测试。
+
+若想生成单个视频的 2D 姿态标注文件，用户在安装 mmdetection 和 mmpose 之后，可使用以下脚本进行 NTURGB+D 视频的姿态提取：
 
 ```python
 python ntu_pose_extraction.py S001C001P001R001A001_rgb.avi S001C001P001R001A001.pkl
 ```
+
+请注意，由于 mmpose 算法库升级，此脚本的推理结果与提供的姿态点数据集可能略有差异。
 
 在用户获得数据集某部分所有视频的姿态标注文件（如 `ntu60_xsub_val`）后，可以将其集合成一个 list 数据并保存为 `ntu60_xsub_val.pkl`。用户可用这些大型 pickle 文件进行训练和测试。
 
@@ -65,7 +72,7 @@ python ntu_pose_extraction.py S001C001P001R001A001_rgb.avi S001C001P001R001A001.
 
 ## 可视化
 
-为了可视化骨架数据，用户需要准备 RGB 的视频。详情可参考 [visualize_heatmap_volume](/demo/visualize_heatmap_volume.ipynb)。这里提供一些 NTU-60 和 FineGYM 上的例子
+为了可视化骨架数据，用户需要准备 RGB 的视频。详情可参考 \[visualize_heatmap_volume\]。这里提供一些 NTU-60 和 FineGYM 上的例子
 
 <table>
 <thead>
@@ -101,7 +108,7 @@ python ntu_pose_extraction.py S001C001P001R001A001_rgb.avi S001C001P001R001A001.
 </thead>
 </table>
 
-## 如何将 NTU RGB+D 原始数据转化为 MMAction2 格式
+## 如何将 NTU RGB+D 原始数据转化为 MMAction2 格式 （转换好的标注文件目前仅适用于 GCN 模型）
 
 这里介绍如何将 NTU RGB+D 原始数据转化为 MMAction2 格式。首先，需要从 https://github.com/shahroudy/NTURGB-D 下载原始 NTU-RGBD 60 和 NTU-RGBD 120 数据集的原始骨架数据。
 
@@ -117,6 +124,12 @@ python gen_ntu_rgbd_raw.py --data-path your_raw_nturgbd60_skeleton_path --ignore
 python gen_ntu_rgbd_raw.py --data-path your_raw_nturgbd120_skeleton_path --ignored-sample-path NTU_RGBD120_samples_with_missing_skeletons.txt --out-folder your_nturgbd120_output_path --task ntu120
 ```
 
+## 转换其他第三方项目的骨骼标注
+
+MMAction2 提供脚本以将其他第三方项目的骨骼标注转至 MMAction2 格式，如：
+
+- BABEL: `babel2mma2.py`
+
 **待办项**：
 
 - [x] FineGYM
@@ -126,4 +139,4 @@ python gen_ntu_rgbd_raw.py --data-path your_raw_nturgbd120_skeleton_path --ignor
 - [x] NTU120_XSet
 - [x] UCF101
 - [x] HMDB51
-- [ ] Kinetics
+- [x] Kinetics

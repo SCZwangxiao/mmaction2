@@ -1,12 +1,13 @@
-av
-decord >= 0.4.1
-einops
+av>=9.0
+future
 imgaug
 librosa
 lmdb
 moviepy
-onnx
-onnxruntime
+openai-clip
+packaging
 pims
 PyTurboJPEG
-timm
+soundfile
+tensorboard
+wandb

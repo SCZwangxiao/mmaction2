@@ -1,14 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
-from mmcv.cnn import ConvModule, constant_init, kaiming_init, normal_init
-from mmcv.runner import load_checkpoint
-from mmcv.utils import _BatchNorm
+from mmcv.cnn import ConvModule
+from mmengine.logging import MMLogger
+from mmengine.model.weight_init import constant_init, kaiming_init, normal_init
+from mmengine.runner import load_checkpoint
+from mmengine.utils.dl_utils.parrots_wrapper import _BatchNorm
 
-from ...utils import get_root_logger
-from ..builder import BACKBONES
+from mmaction.registry import MODELS
 
 
-@BACKBONES.register_module()
+@MODELS.register_module()
 class C3D(nn.Module):
     """C3D backbone.
 
@@ -25,6 +26,8 @@ class C3D(nn.Module):
         act_cfg (dict | None): Config dict for activation layer. If set to
             None, it uses ``dict(type='ReLU')`` to construct layers.
             Default: None.
+        out_dim (int): The dimension of last layer feature (after flatten).
+            Depends on the input shape. Default: 8192.
         dropout_ratio (float): Probability of dropout layer. Default: 0.5.
         init_std (float): Std value for Initiation of fc layers. Default: 0.01.
     """
@@ -35,6 +38,7 @@ class C3D(nn.Module):
                  conv_cfg=None,
                  norm_cfg=None,
                  act_cfg=None,
+                 out_dim=8192,
                  dropout_ratio=0.5,
                  init_std=0.005):
         super().__init__()
@@ -76,7 +80,7 @@ class C3D(nn.Module):
         self.pool5 = nn.MaxPool3d(
             kernel_size=(2, 2, 2), stride=(2, 2, 2), padding=(0, 1, 1))
 
-        self.fc6 = nn.Linear(8192, 4096)
+        self.fc6 = nn.Linear(out_dim, 4096)
         self.fc7 = nn.Linear(4096, 4096)
 
         self.relu = nn.ReLU()
@@ -86,7 +90,7 @@ class C3D(nn.Module):
         """Initiate the parameters either from existing checkpoint or from
         scratch."""
         if isinstance(self.pretrained, str):
-            logger = get_root_logger()
+            logger = MMLogger.get_current_instance()
             logger.info(f'load model from: {self.pretrained}')
 
             load_checkpoint(self, self.pretrained, strict=False, logger=logger)
